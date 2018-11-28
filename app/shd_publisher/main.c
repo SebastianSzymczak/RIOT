@@ -18,6 +18,10 @@
  * @}
  */
 
+ 
+#define TOPIC_SUB_LIGHT1			"subscriber/light_1"
+#define TOPIC_SUB_LIGHT2			"subscriber/light_2"
+ 
 #include <stdio.h>
 
 #include "periph/gpio.h"
@@ -73,33 +77,9 @@ static void *emcute_thread(void *arg)
 }
 
 
-static unsigned get_qos(const char *str)
-{
-    int qos = atoi(str);
-    switch (qos) {
-        case 1:     return EMCUTE_QOS_1;
-        case 2:     return EMCUTE_QOS_2;
-        default:    return EMCUTE_QOS_0;
-    }
-}
-
-
-static int cmd_pub(int argc, char **argv)
+static int publisherHandler(int argc, char **argv)
 {
     emcute_topic_t t;
-    unsigned flags = EMCUTE_QOS_0;
-
-    if (argc < 3) {
-        printf("usage: %s <topic name> <data> [QoS level]\n", argv[0]);
-        return 1;
-    }
-
-    /* parse QoS level */
-    if (argc >= 4) {
-        flags |= get_qos(argv[3]);
-    }
-
-    printf("pub with topic: %s and name %s and flags 0x%02x\n", argv[1], argv[2], (int)flags);
 
     /* step 1: get topic id */
     t.name = argv[1];
@@ -109,7 +89,7 @@ static int cmd_pub(int argc, char **argv)
     }
 
     /* step 2: publish data */
-    if (emcute_pub(&t, argv[2], strlen(argv[2]), flags) != EMCUTE_OK) {
+    if (emcute_pub(&t, argv[2], strlen(argv[2]), EMCUTE_QOS_0) != EMCUTE_OK) {
         printf("error: unable to publish data to topic '%s [%i]'\n",
                 t.name, (int)t.id);
         return 1;
@@ -118,6 +98,7 @@ static int cmd_pub(int argc, char **argv)
     printf("Published %i bytes to topic '%s [%i]'\n",
             (int)strlen(argv[2]), t.name, t.id);
 
+			(void)(argc);
     return 0;
 }
 
@@ -133,23 +114,23 @@ static int raspberry_pi(int sensor1 , int sensor2){
 					  gpio_set(GPIO_PIN(0,23));
 					  gpio_set(GPIO_PIN(0,28));
 					  char *message[] = {"pub","publisher/bothOn","1"};
-						 cmd_pub(3, message);
+						 publisherHandler(3, message);
 				  }
 				// Reading from the infrared sensor  1
 				   else if (sensor1) {
 		                 printf("Movement has been detected in room 1\n");
 				         gpio_set(GPIO_PIN(0,23));
 						 gpio_clear(GPIO_PIN(0,28));
-						 	char *message[] = {"pub","subscriber/light_1","1"};
-						 cmd_pub(3, message);
+						 	char *message[] = {"pub",TOPIC_SUB_LIGHT1,"this is sensor 1"};
+						 publisherHandler(3, message);
                            }
 				// Reading from the infrared sensor  2  
 		            else if (sensor2) {
 		                 printf("Movement has been detected in room 2\n");
 						 gpio_set(GPIO_PIN(0,28));
 				         gpio_clear(GPIO_PIN(0,23));
-						 char *message[] = {"pub","subscriber/light_2","1"};
-						 cmd_pub(3, message);
+						 char *message[] = {"pub",TOPIC_SUB_LIGHT2,"this is sensor 2"};
+						 publisherHandler(3, message);
                            }
 						   // xtimer_sleep(2);	
 						   return 0;
@@ -269,7 +250,7 @@ void functionMCSensor (void){
 	else{    notConnected = 0;
 	         printf("Successfully connected to Gateway\n");
 			 char *message[] = {"pub","publisher/communication", "\"The SHD microcontroller is live, and ready to communicate.\""};
-						 cmd_pub(3, message);
+						 publisherHandler(3, message);
             thread_create(mainStack, sizeof(mainStack),
                     THREAD_PRIORITY_MAIN - 1,
                     THREAD_CREATE_STACKTEST,
