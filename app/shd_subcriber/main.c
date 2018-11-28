@@ -36,7 +36,7 @@
 #define TOPIC_MAXLEN        (64U)
 
 #define BROKER_IP			"fdaa:bb:cc:ee::3"
-#define TOPIC_SUP			"subscriber/light"
+#define TOPIC_SUB			"subscriber/light"
 
 
 static char stack[THREAD_STACKSIZE_DEFAULT];
@@ -257,25 +257,7 @@ static int cmd_unsub(int argc, char **argv)
 
 
 
-static int cmd_will(int argc, char **argv)
-{
-    if (argc < 3) {
-        printf("usage %s <will topic name> <will message content>\n", argv[0]);
-        return 1;
-    }
 
-    if (emcute_willupd_topic(argv[1], 0) != EMCUTE_OK) {
-        puts("error: unable to update the last will topic");
-        return 1;
-    }
-    if (emcute_willupd_msg(argv[2], strlen(argv[2])) != EMCUTE_OK) {
-        puts("error: unable to update the last will message");
-        return 1;
-    }
-
-    puts("Successfully updated last will topic and message");
-    return 0;
-}
 
 
 
@@ -286,7 +268,6 @@ static const shell_command_t shell_commands[] = {
     { "pub", "publish something", cmd_pub },
     { "sub", "subscribe topic", cmd_sub },
     { "unsub", "unsubscribe from topic", cmd_unsub },
-    { "will", "register a last will", cmd_will },
     { NULL, NULL, NULL }
 };
 
@@ -296,6 +277,7 @@ static const shell_command_t shell_commands[] = {
 int main(void)
 {
 	sock_udp_ep_t gw = { .family = AF_INET6, .port = EMCUTE_PORT };
+	unsigned i = 0;
 	
 	
     puts("MQTT-SN example application\n");
@@ -319,20 +301,20 @@ int main(void)
                   emcute_thread, NULL, "emcute");
 	printf("Trying to connect\n");	
 	
-	xtimer_sleep(5);
+	/* 
+	*/
+	xtimer_sleep(5);			 
 		if (emcute_con(&gw, true, NULL, NULL, 0, 0) != EMCUTE_OK) {
 		   printf("error: unable to connect to Gateway\n\n\n");
 		   return 1;
 		}			  
 	printf("Successfully connected to Gateway\n");
 		  
-	unsigned i = 0;
-	unsigned flags = EMCUTE_QOS_0;
-
+	
     subscriptions[i].cb = on_pub;
-	strcpy(topics[i], TOPIC_SUP);
+	strcpy(topics[i], TOPIC_SUB);
     subscriptions[i].topic.name = topics[i];
-		if (emcute_sub(&subscriptions[i], flags) != EMCUTE_OK) {
+		if (emcute_sub(&subscriptions[i], EMCUTE_QOS_0) != EMCUTE_OK) {
 			printf("error: unable to subscribe to Gateway\n");
 			return 1;
 		}
