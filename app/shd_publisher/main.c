@@ -18,48 +18,6 @@
  * @}
  */
 
-#define TEST_OUTPUT_STDOUT 1
-#define TEST_OUTPUT_SDL 2
-#define TEST_OUTPUT_SPI 3
-#define TEST_OUTPUT_I2C 4
-
-#ifndef TEST_OUTPUT
-#error "TEST_OUTPUT not defined"
-#endif
-
-#if TEST_OUTPUT == TEST_OUTPUT_I2C
-#ifndef TEST_I2C
-#error "TEST_I2C not defined"
-#endif
-#ifndef TEST_ADDR
-#error "TEST_ADDR not defined"
-#endif
-#ifndef TEST_DISPLAY
-#error "TEST_DISPLAY not defined"
-#endif
-#ifndef TEST_PIN_RESET
-#error "TEST_PIN_RESET not defined"
-#endif
-#endif
-
-#if TEST_OUTPUT == TEST_OUTPUT_SPI
-#ifndef TEST_SPI
-#error "TEST_SPI not defined"
-#endif
-#ifndef TEST_DISPLAY
-#error "TEST_DISPLAY not defined"
-#endif
-#ifndef TEST_PIN_CS
-#error "TEST_PIN_CS not defined"
-#endif
-#ifndef TEST_PIN_DC
-#error "TEST_PIN_DC not defined"
-#endif
-#ifndef TEST_PIN_RESET
-#error "TEST_PIN_RESET not defined"
-#endif
-#endif
-
 #include <stdio.h>
 
 #include "periph/gpio.h"
