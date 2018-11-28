@@ -21,41 +21,24 @@
 #include <stdio.h>
 
 #include "periph/gpio.h"
-#if TEST_OUTPUT == TEST_OUTPUT_SPI
-#include "periph/spi.h"
-#endif
-#if TEST_OUTPUT == TEST_OUTPUT_I2C
-#include "periph/i2c.h"
-#endif
-
 #include "xtimer.h"
 #include "u8g2.h"
-
-#include <stdio.h>
 #include <string.h>
 #include "benchmark.h"
 #include "irq.h"
-#include "shell.h"
 #include "led.h"
-#include "xtimer.h"
-#include "periph/gpio.h"
 #include <stdlib.h>
 #include "timex.h"
 #include "periph/adc.h"
 #include "thread.h"
 
 //part of emcute
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-
-#include "shell.h"
 #include "msg.h"
 #include "net/emcute.h"
 #include "net/ipv6/addr.h"
 
 #define EMCUTE_PORT         (1883U)
-#define EMCUTE_ID           ("tomaten")
+#define EMCUTE_ID           ("publisher")
 #define EMCUTE_PRIO         (THREAD_PRIORITY_MAIN - 1)
 
 #define NUMOFSUBS           (16U)
@@ -99,28 +82,6 @@ static unsigned get_qos(const char *str)
         default:    return EMCUTE_QOS_0;
     }
 }
-
-/* static int cmd_con(int argc, char **argv)
-{
-    sock_udp_ep_t gw = { .family = AF_INET6, .port = EMCUTE_PORT };
-
-
-    if (ipv6_addr_from_str((ipv6_addr_t *)&gw.addr.ipv6, BROCKER_IP) == NULL) {
-        printf("error parsing IPv6 address\n");
-        return 1;
-    }
-
-    int i = 5; 
-	for (i = 5; i<=10000;i++);
-    if (emcute_con(&gw, true, NULL, NULL, 0, 0) != EMCUTE_OK) {
-        printf("error: unable to connect to [%s]:%i\n", argv[1], (int)gw.port);
-        return 1;
-    }
-    printf("Successfully connected to gateway at [%s]:%i\n",
-           argv[1], (int)gw.port);
-    (void)(argc);
-    return 0;
-}*/
 
 
 static int cmd_pub(int argc, char **argv)
@@ -179,7 +140,7 @@ static int raspberry_pi(int sensor1 , int sensor2){
 		                 printf("Movement has been detected in room 1\n");
 				         gpio_set(GPIO_PIN(0,23));
 						 gpio_clear(GPIO_PIN(0,28));
-						 	char *message[] = {"pub","publisher/roomSensorInformation1/on","1"};
+						 	char *message[] = {"pub","subscriber/light_1","1"};
 						 cmd_pub(3, message);
                            }
 				// Reading from the infrared sensor  2  
@@ -187,7 +148,7 @@ static int raspberry_pi(int sensor1 , int sensor2){
 		                 printf("Movement has been detected in room 2\n");
 						 gpio_set(GPIO_PIN(0,28));
 				         gpio_clear(GPIO_PIN(0,23));
-						 char *message[] = {"pub","publisher/roomSensorInformation2","1"};
+						 char *message[] = {"pub","subscriber/light_2","1"};
 						 cmd_pub(3, message);
                            }
 						   // xtimer_sleep(2);	
@@ -299,8 +260,6 @@ void functionMCSensor (void){
                   emcute_thread, NULL, "emcute");
 
 				  int notConnected = 1 ;
-	//int i = 5; 
-	//for (i = 5; i<=10000;i++);
 	
 	xtimer_sleep(5);
 	while(notConnected){
@@ -317,22 +276,6 @@ void functionMCSensor (void){
                     adc,
                     NULL, "mainThread");
 	}	}	
-	
-		   /* char *args[] = {"con","","","",""};				
-					 if(!cmd_con(5, args)){
-						 puts("connection has been established");
-					char *message[] = {"pub","publisher/communication", "\"The SHD microcontroller is live, and ready to communicate.\""};
-						 cmd_pub(3, message);
-            thread_create(mainStack, sizeof(mainStack),
-                    THREAD_PRIORITY_MAIN - 1,
-                    THREAD_CREATE_STACKTEST,
-                    adc,
-                    NULL, "mainThread");
-					 }else{
-						 puts("error in connection!!!");
-				
-					 }*/
-
 					return ;
 }
 
