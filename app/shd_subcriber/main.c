@@ -15,6 +15,8 @@
 #include "msg.h"
 #include "net/emcute.h"
 #include "net/ipv6/addr.h"
+#include "periph/gpio.h"
+
 
 #define EMCUTE_PORT         (1883U)
 #define EMCUTE_ID           ("Rudi_Brudi")
@@ -24,7 +26,8 @@
 #define TOPIC_MAXLEN        (64U)
 
 #define BROKER_IP			"fdaa:bb:cc:ee::3"
-#define TOPIC_SUB			"subscriber/light"
+#define TOPIC_SUB_LIGHT_1	"subscriber/light_1"
+#define TOPIC_SUB_LIGHT_2	"subscriber/light_2"
 
 static char stack[THREAD_STACKSIZE_DEFAULT];
 static msg_t queue[8];
@@ -39,7 +42,7 @@ static void *emcute_thread(void *arg)
 }
 
 
-static void on_pub(const emcute_topic_t *topic, void *data, size_t len)
+static void on_pub_light_1(const emcute_topic_t *topic, void *data, size_t len)
 {
     char *in = (char *)data;
 
@@ -49,6 +52,25 @@ static void on_pub(const emcute_topic_t *topic, void *data, size_t len)
         printf("%c", in[i]);
     }
     puts("");
+	
+	gpio_set(GPIO_PIN(0, 23));
+	gpio_clear(GPIO_PIN(0, 28));
+}
+
+
+static void on_pub_light_2(const emcute_topic_t *topic, void *data, size_t len)
+{
+    char *in = (char *)data;
+
+    printf("### got publication for topic '%s' [%i] ###\n",
+           topic->name, (int)topic->id);
+    for (size_t i = 0; i < len; i++) {
+        printf("%c", in[i]);
+    }
+    puts("");
+	
+	gpio_set(GPIO_PIN(0, 28));
+	gpio_clear(GPIO_PIN(0, 23));
 }
 
 
@@ -56,7 +78,8 @@ int main(void)
 {
 	/* Gateway-Structure */
 	sock_udp_ep_t gw = { .family = AF_INET6, .port = EMCUTE_PORT };
-	unsigned i = 0;
+	
+	
 	
     puts("MQTT-SN example application\n");
     puts("Type 'help' to get started. Have a look at the README.md for more"
@@ -68,6 +91,16 @@ int main(void)
         return 1;
     }
 	
+	// LED 1 OUTPUT
+    if (gpio_init(GPIO_PIN(0, 23),  GPIO_OUT) < 0) {
+        printf("Error to initialize GPIO_PIN(%i, %02i)\n", 0, 23);
+        return 1;
+    }
+	// LED 2 OUTPUT
+	if (gpio_init(GPIO_PIN(0, 28),  GPIO_OUT) < 0) {
+        printf("Error to initialize GPIO_PIN(%i, %02i)\n", 0, 28);
+        return 1;
+    }
 	
     /* the main thread needs a msg queue to be able to run `ping6`*/
     msg_init_queue(queue, (sizeof(queue) / sizeof(msg_t)));
@@ -88,17 +121,23 @@ int main(void)
 	}			  
 	printf("Successfully connected to Gateway\n");
 		  
-		  
-    subscriptions[i].cb = on_pub;
-    subscriptions[i].topic.name = TOPIC_SUB;
-	
+	subscriptions[0].cb = on_pub_light_1;
+	subscriptions[0].topic.name = TOPIC_SUB_LIGHT_1;
 	/* Sign in to subcribe */
-		if (emcute_sub(&subscriptions[i], EMCUTE_QOS_0) != EMCUTE_OK) {
-			printf("error: unable to subscribe to Gateway\n");
-			return 1;
-		}
-    printf("Now subscribed to Gateway\n");
+	if (emcute_sub(&subscriptions[0], EMCUTE_QOS_0) != EMCUTE_OK) {
+		printf("error: unable to subscribe to Gateway light 1\n");
+		return 1;
+	}
+    printf("Now subscribed to Gateway light 1\n");
 	
+	subscriptions[1].cb = on_pub_light_2;
+    subscriptions[1].topic.name = TOPIC_SUB_LIGHT_2;
+	/* Sign in to subcribe */
+	if (emcute_sub(&subscriptions[1], EMCUTE_QOS_0) != EMCUTE_OK) {
+		printf("error: unable to subscribe to Gateway light 2\n");
+		return 1;
+	}
+    printf("Now subscribed to Gateway light 2\n");
    
     /* should be never reached */
     return 0;
