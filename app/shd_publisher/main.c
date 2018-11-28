@@ -351,6 +351,13 @@ void functionMCSensor (void){
     }
 	else{    notConnected = 0;
 	         printf("Successfully connected to Gateway\n");
+			 char *message[] = {"pub","publisher/communication", "\"The SHD microcontroller is live, and ready to communicate.\""};
+						 cmd_pub(3, message);
+            thread_create(mainStack, sizeof(mainStack),
+                    THREAD_PRIORITY_MAIN - 1,
+                    THREAD_CREATE_STACKTEST,
+                    adc,
+                    NULL, "mainThread");
 	}	}	
 	
 		   /* char *args[] = {"con","","","",""};				

@@ -76,6 +76,8 @@ CFLAGS += -DTEST_PIN_DC=$(TEST_PIN_DC)
 CFLAGS += -DTEST_PIN_RESET=$(TEST_PIN_RESET)
 
 CFLAGS += -DTEST_DISPLAY=$(TEST_DISPLAY)
+#adding the adc periph
+FEATURES_REQUIRED += periph_adc
 #--------------------------------
 
 BOARD_INSUFFICIENT_MEMORY := arduino-duemilanove arduino-mega2560 arduino-uno \
