@@ -18,7 +18,7 @@
  * @}
  */
 
-#define DEBUG_FLAG			(0U)
+#define DEBUG_FLAG			(1U)
 #define TOPIC_SUB_LIGHT1			"subscriber/light_1"
 #define TOPIC_SUB_LIGHT2			"subscriber/light_2"
  
