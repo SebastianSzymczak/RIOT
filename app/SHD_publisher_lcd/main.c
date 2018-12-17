@@ -372,7 +372,7 @@ void *adc(void *argv){
    (void)(argv);
   
 return NULL;;
-}*/
+}
 
 void *timeLEDIsOn(void *arg)
 {
@@ -388,7 +388,7 @@ void *timeLEDIsOn(void *arg)
 				  
 			  }
 			  
-			  else{
+			   else{
 				  xtimer_sleep(1);	  
 			  }
 	     
@@ -396,7 +396,7 @@ void *timeLEDIsOn(void *arg)
 		  printf("Room 2 was on for:  %d \n", roomsTimeArray[1]);
 	  }
 	    return 0;
-}
+}*/
 
 
 
@@ -588,8 +588,16 @@ static void on_pub_light_1(const emcute_topic_t *topic, void *data, size_t len)
 	puts("");
 	
 	/* Light 1 turn on and Light 2 turn off */
-	gpio_set(GPIO_PIN(0, 23));
-	gpio_clear(GPIO_PIN(0, 28));
+	if (in[0] == '1')
+	{gpio_set(GPIO_PIN(0, 23));}
+	else if (in[0] == '0'){
+		gpio_clear(GPIO_PIN(0, 23));
+	}
+	else {printf("error: got wrong publication for topic\n");}
+	
+
+	//gpio_set(GPIO_PIN(0, 23));
+	//gpio_clear(GPIO_PIN(0, 28));
 }
 
 
@@ -603,9 +611,13 @@ static void on_pub_light_2(const emcute_topic_t *topic, void *data, size_t len)
     }
 	puts("");
 	
-	/* Light 2 turn on and Light 1 turn off */
-	gpio_set(GPIO_PIN(0, 28));
-	gpio_clear(GPIO_PIN(0, 23));
+	/* Light 1 turn on and Light 2 turn off */
+	if (in[0] == '1')
+	{gpio_set(GPIO_PIN(0, 28));}
+	else if (in[0] == '0'){
+		gpio_clear(GPIO_PIN(0, 28));
+	}
+	else {printf("error: got wrong publication for topic\n");}
 }
 
 
@@ -647,11 +659,11 @@ int main(void)
                     monitorThread,
                     NULL, "monitorThread");
 					
-		thread_create(stack3, sizeof(stack3),
+		/*thread_create(stack3, sizeof(stack3),
                     THREAD_PRIORITY_MAIN - 1,
                     THREAD_CREATE_STACKTEST,
                     timeLEDIsOn,
-                    NULL, "timeLEDIsOn");
+                    NULL, "timeLEDIsOn");*/
 
 	/* Waiting time for global address can be generated  */
 	xtimer_sleep(5);
