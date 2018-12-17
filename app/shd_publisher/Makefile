@@ -107,7 +107,8 @@ USEMODULE += gnrc_icmpv6_echo
 # which is not needed in a production environment but helps in the
 # development process:
 DEVELHELP ?= 1
-
+#CFLAGS += -DIEEE802154_DEFAULT_CHANNEL=17
+ 
 CFLAGS += -DGNRC_IPV6_NIB_CONF_SLAAC=1
 # Comment this out to join RPL DODAGs even if DIOs do not contain
 # DODAG Configuration Options (see the doc for more info)
