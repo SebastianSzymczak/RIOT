@@ -19,8 +19,8 @@
  */
 
 #define DEBUG_FLAG			(1U)
-#define TOPIC_SUB_LIGHT1			"subscriber/light_1"
-#define TOPIC_SUB_LIGHT2			"subscriber/light_2"
+#define TOPIC_PUB_LIGHT1			"publisher/light_1"
+#define TOPIC_PUB_LIGHT2			"publisher/light_2"
  
 #include <stdio.h>
 
@@ -111,25 +111,25 @@ static int raspberry_pi(int sensor1 , int sensor2){
 
 	            // send the message to the controller mc as raspberry_pi(int sensor1 , int sensor2)
                 if(sensor1 && sensor2){
-					  gpio_set(GPIO_PIN(0,23));
-					  gpio_set(GPIO_PIN(0,28));
+					 // gpio_set(GPIO_PIN(0,23));
+					  //gpio_set(GPIO_PIN(0,28));
 					  char *message[] = {"pub","publisher/bothOn","1"};
 						 publisherHandler(3, message);
 				  }
 				// Reading from the infrared sensor  1
 				   else if (sensor1) {
 		                 if(DEBUG_FLAG) printf("Movement has been detected in room 1\n");
-				         gpio_set(GPIO_PIN(0,23));
-						 gpio_clear(GPIO_PIN(0,28));
-						 	char *message[] = {"pub",TOPIC_SUB_LIGHT1,"this is sensor 1"};
+				        // gpio_set(GPIO_PIN(0,23));
+						// gpio_clear(GPIO_PIN(0,28));
+						 	char *message[] = {"pub",TOPIC_PUB_LIGHT1,"1"};
 						 publisherHandler(3, message);
                            }
 				// Reading from the infrared sensor  2  
 		            else if (sensor2) {
 		                 if(DEBUG_FLAG) printf("Movement has been detected in room 2\n");
-						 gpio_set(GPIO_PIN(0,28));
-				         gpio_clear(GPIO_PIN(0,23));
-						 char *message[] = {"pub",TOPIC_SUB_LIGHT2,"this is sensor 2"};
+						// gpio_set(GPIO_PIN(0,28));
+				        // gpio_clear(GPIO_PIN(0,23));
+						 char *message[] = {"pub",TOPIC_PUB_LIGHT2,"1"};
 						 publisherHandler(3, message);
                            }
 						   // xtimer_sleep(2);	
@@ -183,8 +183,13 @@ void *adc(void *argv){
 				if(DEBUG_FLAG) printf("Someone on the door!! \n");
 				xtimer_sleep(1);
 				if(DEBUG_FLAG) printf("ADC value is %d \n", sample);
+					  gpio_set(GPIO_PIN(0,23));
+					  gpio_set(GPIO_PIN(0,28));
+					  xtimer_sleep(2);
 				int sensor1 = gpio_read(GPIO_PIN(0, 13));
 				int sensor2 = gpio_read(GPIO_PIN(0, 14));
+				      gpio_clear(GPIO_PIN(0,23));
+					  gpio_clear(GPIO_PIN(0,28));
 				
 				/*This code is for the raspberry pi*/
             raspberry_pi(sensor1 , sensor2); //this should be sent to rpi as message
