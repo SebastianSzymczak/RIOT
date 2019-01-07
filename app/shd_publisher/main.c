@@ -7,23 +7,26 @@
  */
 
 /**
- * @ingroup     tests
- * @{
  *
- * @file
- * @brief       Test application for the U8g2 package.
- *
- * @author      Bas Stottelaar <basstottelaar@gmail.com>
+ * @author      Alhajras Algdairy <alhajras.algdairy@gmail.com>
  *
  * @}
  */
 
-#define DEBUG_FLAG			(1U)
-#define TOPIC_PUB_LIGHT1			"publisher/light_1"
-#define TOPIC_PUB_LIGHT2			"publisher/light_2"
- 
-#include <stdio.h>
+#define DEBUG_FLAG					 (1U)
+#define TOPIC_PUB_LIGHT1			 "publisher/light_1"
+#define TOPIC_PUB_LIGHT2			 "publisher/light_2"
+#define EMCUTE_PORT        			 (1883U)
+#define EMCUTE_ID          			 ("publisher")
+#define EMCUTE_PRIO        			 (THREAD_PRIORITY_MAIN - 1)
+#define NUMOFSUBS          			 (16U)
+#define TOPIC_MAXLEN       			 (64U)
+#define BROKER_IP          			 ("fdaa:bb:cc:ee::3")
+#define BROKER_PORT         	     ("1883")
+#define RES            				 ADC_RES_10BIT
+#define DELAY 						 (100LU * US_PER_MS) 
 
+#include <stdio.h>
 #include "periph/gpio.h"
 #include "xtimer.h"
 #include "u8g2.h"
@@ -35,38 +38,18 @@
 #include "timex.h"
 #include "periph/adc.h"
 #include "thread.h"
-
-//part of emcute
 #include "msg.h"
 #include "net/emcute.h"
 #include "net/ipv6/addr.h"
 
-#define EMCUTE_PORT         (1883U)
-#define EMCUTE_ID           ("publisher")
-#define EMCUTE_PRIO         (THREAD_PRIORITY_MAIN - 1)
-
-#define NUMOFSUBS           (16U)
-#define TOPIC_MAXLEN        (64U)
-
-#define BROKER_IP           ("fdaa:bb:cc:ee::3")
-#define BROKER_PORT           ("1883")
-// END of EMCUTE
-
-#define RES             ADC_RES_10BIT
-#define DELAY (100LU * US_PER_MS)  
-
-//emcute static data
+ 
 
 static msg_t queue[8];
-
 static emcute_sub_t subscriptions[NUMOFSUBS];
-//static char topics[NUMOFSUBS][TOPIC_MAXLEN];
-//
 char publisherStack[THREAD_STACKSIZE_MAIN];
 char mainStack[THREAD_STACKSIZE_MAIN];
-
-
 static const char MICRO_CONTROLLER_1[] = "MICRO_CONTROLLER_1";
+
 
 // emcute part
 static void *emcute_thread(void *arg)
@@ -102,12 +85,8 @@ static int publisherHandler(int argc, char **argv)
     return 0;
 }
 
-//
-//void *thread_handler(void *arg);
 
 static int raspberry_pi(int sensor1 , int sensor2){
-	
-
 
 	            // send the message to the controller mc as raspberry_pi(int sensor1 , int sensor2)
                 if(sensor1 && sensor2){
@@ -139,6 +118,8 @@ static int raspberry_pi(int sensor1 , int sensor2){
 						   return 0;
 };
 
+
+// This method for reading the adc value of the door sensor
 void *adc(void *argv){
 
     printf("%s is ON \n" , MICRO_CONTROLLER_1);
@@ -149,14 +130,14 @@ void *adc(void *argv){
     if(DEBUG_FLAG) puts("This test will sample all available ADC lines once every 100ms with\n"
          "a 10-bit resolution and print the sampled results to STDIO\n\n");
  
-    for (unsigned i = 0; i < ADC_NUMOF; i++) {
-        if (adc_init(ADC_LINE(i)) < 0) {
-            if(DEBUG_FLAG) printf("Initialization of ADC_LINE(%u) failed\n", i);
+
+        if (adc_init(ADC_LINE(0)) < 0) {
+            if(DEBUG_FLAG) printf("Initialization of ADC_LINE(%u) failed\n", 0);
             return NULL;;
         } else {
-            if(DEBUG_FLAG) printf("Successfully initialized ADC_LINE(%u)\n", i);
+            if(DEBUG_FLAG) printf("Successfully initialized ADC_LINE(%u)\n", 0);
         }
-    }
+   
 	
 	// Sensor 1 INPUT
 	 if (gpio_init(GPIO_PIN(0, 13),  GPIO_IN) < 0) {
@@ -173,15 +154,13 @@ void *adc(void *argv){
 	
 	 
     while (1) {
-        for (unsigned i = 0; i < ADC_NUMOF; i++) {
-            sample = adc_sample(ADC_LINE(i), RES);
+            sample = adc_sample(ADC_LINE(0), RES);
             if (sample < 0) {
-                if(DEBUG_FLAG) printf("ADC_LINE(%u): 10-bit resolution not applicable\n", i);
+                if(DEBUG_FLAG) printf("ADC_LINE(%u): 10-bit resolution not applicable\n", 0);
             } else {
-                if(DEBUG_FLAG) printf("ADC_LINE(%u): %i\n", i, sample);
+                if(DEBUG_FLAG) printf("ADC_LINE(%u): %i\n", 0, sample);
             }
 			
-			if(i == 0) {
 			if(sample > 50){
 				if(DEBUG_FLAG) printf("Someone on the door!! \n");
 				xtimer_sleep(1);
@@ -198,8 +177,8 @@ void *adc(void *argv){
             raspberry_pi(sensor1 , sensor2); //this should be sent to rpi as message
 			}
 			/*This code is for the raspberry pi*/
-			}
-        }
+			
+        
         xtimer_periodic_wakeup(&last, DELAY);
     }
   
