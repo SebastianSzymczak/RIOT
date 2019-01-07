@@ -120,9 +120,9 @@ char stack1[THREAD_STACKSIZE_MAIN];
 char stack2[THREAD_STACKSIZE_MAIN];
 char stack3[THREAD_STACKSIZE_MAIN];
 char roomNumber = '0';
-short roomOneTime = 0;
-short roomTwoTime = 0;
-int roomsTimeArray[2];
+int roomOneTime = 0;
+int roomTwoTime = 0;
+int roomsTimeArray[2] = {0, 0}; ;
 
 static const uint8_t logo[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0xE0,
@@ -195,13 +195,18 @@ char* concat(const char *s1, const char *s2)
 
 
 
-short powerConsumtion(void){
-
+int powerConsumtion(void){
+					
+					
 	if(roomNumber == '1'){
-		return (roomsTimeArray[0] * 100/ (roomsTimeArray[0] + roomsTimeArray[1]));
+		printf("The roomsTimeArray 0: %d \n", roomsTimeArray[0]);
+		printf("The power consumed is: %d \n", (roomsTimeArray[0] * 100/ (roomsTimeArray[0] + roomsTimeArray[1])));
+		return ((roomsTimeArray[0] * 100)/ (roomsTimeArray[0] + roomsTimeArray[1]));
 	}
 	else if(roomNumber == '2'){
-		return (roomsTimeArray[1] * 100/ (roomsTimeArray[0] + roomsTimeArray[1]));
+		printf("The roomsTimeArray 1: %d \n", roomsTimeArray[1]);
+		printf("The power consumed is: %d \n", (roomsTimeArray[1] * 100/ (roomsTimeArray[0] + roomsTimeArray[1])));
+		return ((roomsTimeArray[1] * 100)/ (roomsTimeArray[0] + roomsTimeArray[1]));
 	}
 	return 0; 
 }
@@ -279,10 +284,14 @@ void *monitorThread(void *arg)
                 case 1:
                     message[6] = roomNumber;
                     u8g2_DrawStr(&u8g2, 5, 22, message);
-					char str[255];
-					short powerConsumtionVar = powerConsumtion();
+					char str[10];
+					int powerConsumtionVar = powerConsumtion();
                     sprintf(str, "%d", powerConsumtionVar);
-				    u8g2_DrawStr(&u8g2, 5, 40, append(str, "%"));
+				    u8g2_DrawStr(&u8g2, 5, 40, str);
+					if(powerConsumtionVar==100)
+					u8g2_DrawStr(&u8g2, 40, 37, "%");
+				else 
+					u8g2_DrawStr(&u8g2, 25, 40, "%");
 					break;
                 case 2:
                     u8g2_DrawBitmap(&u8g2, 0, 0, 8, 32, logo);
