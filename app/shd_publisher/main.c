@@ -113,8 +113,11 @@ static int raspberry_pi(int sensor1 , int sensor2){
                 if(sensor1 && sensor2){
 					 // gpio_set(GPIO_PIN(0,23));
 					  //gpio_set(GPIO_PIN(0,28));
-					  char *message[] = {"pub","publisher/bothOn","1"};
+					  char *message[] = {"pub",TOPIC_PUB_LIGHT1,"1"};
 						 publisherHandler(3, message);
+					  char   *message2[] = {"pub",TOPIC_PUB_LIGHT2,"1"};
+						 publisherHandler(3, message2);
+                           
 				  }
 				// Reading from the infrared sensor  1
 				   else if (sensor1) {
