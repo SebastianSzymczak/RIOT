@@ -75,7 +75,7 @@
 #include "periph/gpio.h"
 #include <stdlib.h>
 #include "timex.h"
-//#include "periph/adc.h"
+#include "periph/adc.h"
 #include "thread.h"
 
 //part of emcute
@@ -98,12 +98,14 @@
 #define BROKER_IP          ("fdaa:bb:cc:ee::3")
 //#define BROKER_PORT        ("1883")
 // END of EMCUTE
-
+#define DEBUG_FLAG 1
 //#define RES             	ADC_RES_10BIT
 #define DELAY 				(100LU * US_PER_MS) 
 //#define BROKER_IP			"fdaa:bb:cc:ee::3"
 #define TOPIC_SUB_LIGHT_1	"subscriber/light_1"
 #define TOPIC_SUB_LIGHT_2	"subscriber/light_2" 
+
+#define RES					ADC_RES_10BIT
 
 //emcute static data
 //static char stack4[THREAD_STACKSIZE_DEFAULT];
@@ -122,7 +124,10 @@ char stack3[THREAD_STACKSIZE_MAIN];
 char roomNumber = '0';
 int roomOneTime = 0;
 int roomTwoTime = 0;
-int roomsTimeArray[2] = {0, 0}; ;
+int roomsTimeArray[2] = {0, 0};
+char mainStack[THREAD_STACKSIZE_MAIN];
+
+int nightModus = 0;
 
 static const uint8_t logo[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0xE0,
@@ -183,6 +188,52 @@ static void *emcute_thread(void *arg)
 }
 
 
+void *adc(void *argv){
+
+    printf("%s is ON \n" , MICRO_CONTROLLER_1);
+    xtimer_ticks32_t last = xtimer_now();
+    int sample = 0;
+
+    if(DEBUG_FLAG) puts("\nRIOT ADC peripheral driver test\n");
+    if(DEBUG_FLAG) puts("This test will sample all available ADC lines once every 100ms with\n"
+         "a 10-bit resolution and print the sampled results to STDIO\n\n");
+
+        if (adc_init(ADC_LINE(0)) < 0) {
+            if(DEBUG_FLAG) printf("Initialization of ADC_LINE(%u) failed\n", 0);
+            return NULL;
+        } else {
+            if(DEBUG_FLAG) printf("Successfully initialized ADC_LINE(%u)\n", 0);
+        }
+ 
+    while (1) {
+        
+            sample = adc_sample(ADC_LINE(0), RES);
+            if (sample < 0) {
+                if(DEBUG_FLAG) printf("ADC_LINE(%u): 10-bit resolution not applicable\n", 0);
+            } else {
+              //  if(DEBUG_FLAG) printf("ADC_LINE(%u): %i\n", 0, sample);
+            }
+           
+            
+				//LEDs off for Nightmodus aktiv
+				if(sample > 250){
+					nightModus = 1;
+				}
+				else 
+					
+					nightModus =0;
+            /*This code is for the raspberry pi*/
+            
+		
+        
+        xtimer_periodic_wakeup(&last, DELAY);
+    }
+ 
+   (void)(argv);
+ 
+return NULL;
+}
+
 
 char* concat(const char *s1, const char *s2)
 {
@@ -199,24 +250,19 @@ int powerConsumtion(void){
 					
 					
 	if(roomNumber == '1'){
-		printf("The roomsTimeArray 0: %d \n", roomsTimeArray[0]);
-		printf("The power consumed is: %d \n", (roomsTimeArray[0] * 100/ (roomsTimeArray[0] + roomsTimeArray[1])));
+	//	printf("The roomsTimeArray 0: %d \n", roomsTimeArray[0]);
+	//	printf("The power consumed is: %d \n", (roomsTimeArray[0] * 100/ (roomsTimeArray[0] + roomsTimeArray[1])));
 		return ((roomsTimeArray[0] * 100)/ (roomsTimeArray[0] + roomsTimeArray[1]));
 	}
 	else if(roomNumber == '2'){
-		printf("The roomsTimeArray 1: %d \n", roomsTimeArray[1]);
-		printf("The power consumed is: %d \n", (roomsTimeArray[1] * 100/ (roomsTimeArray[0] + roomsTimeArray[1])));
+	//	printf("The roomsTimeArray 1: %d \n", roomsTimeArray[1]);
+	//	printf("The power consumed is: %d \n", (roomsTimeArray[1] * 100/ (roomsTimeArray[0] + roomsTimeArray[1])));
 		return ((roomsTimeArray[1] * 100)/ (roomsTimeArray[0] + roomsTimeArray[1]));
 	}
 	return 0; 
 }
 
-char * append(char * string1, char * string2)
-{
-    char * result = NULL;
-    asprintf(&result, "%s%s", string1, string2);
-    return result;
-}
+
 
 void *monitorThread(void *arg)
 {
@@ -328,14 +374,20 @@ static void on_pub_light_1(const emcute_topic_t *topic, void *data, size_t len)
     }
 	puts("");
 	
-	/* Light 1 turn on and Light 2 turn off */
-	if (in[0] == '1')
-		{gpio_set(GPIO_PIN(0, 23));
-			roomNumber= '1';}
-	else if (in[0] == '0'){
-		gpio_clear(GPIO_PIN(0, 23));}
-	else {printf("error: got wrong publication for topic\n");}
-	
+	if(nightModus==1){
+		/* Light 1 turn on and Light 2 turn off */
+		if (in[0] == '1')
+			{gpio_set(GPIO_PIN(0, 23));
+				roomNumber= '1';}
+		else if (in[0] == '0'){
+			gpio_clear(GPIO_PIN(0, 23));}
+		else {printf("error: got wrong publication for topic\n");}
+	}
+	else{
+		gpio_clear(GPIO_PIN(0, 23));
+		gpio_clear(GPIO_PIN(0, 28));
+		
+	}
 
 }
 
@@ -350,15 +402,24 @@ static void on_pub_light_2(const emcute_topic_t *topic, void *data, size_t len)
     }
 	puts("");
 	
-	/* Light 1 turn on and Light 2 turn off */
-	if (in[0] == '1')
-		{gpio_set(GPIO_PIN(0, 28));
-		 roomNumber= '2';
-		}
-	else if (in[0] == '0'){
-		gpio_clear(GPIO_PIN(0, 28));}
-	else {printf("error: got wrong publication for topic\n");}
+	
+	if(nightModus==1){
+		/* Light 1 turn on and Light 2 turn off */
+		if (in[0] == '1')
+			{gpio_set(GPIO_PIN(0, 28));
+			 roomNumber= '2';
+			}
+		else if (in[0] == '0'){
+			gpio_clear(GPIO_PIN(0, 28));}
+		else {printf("error: got wrong publication for topic\n");}
+	}
+	else{
+		gpio_clear(GPIO_PIN(0, 23));
+		gpio_clear(GPIO_PIN(0, 28));
+		
+	}
 }
+
 
 void *timeLEDIsOn(void *arg)
 {
@@ -427,6 +488,12 @@ int main(void)
                     THREAD_CREATE_STACKTEST,
                     timeLEDIsOn,
                     NULL, "timeLEDIsOn");
+					
+	 thread_create(mainStack, sizeof(mainStack),
+                    THREAD_PRIORITY_MAIN - 1,
+                    THREAD_CREATE_STACKTEST,
+                    adc,
+                    NULL, "ADCThread");
 					
 	/* Waiting time for global address can be generated  */
 	xtimer_sleep(5);
